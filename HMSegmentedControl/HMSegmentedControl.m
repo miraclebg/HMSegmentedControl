@@ -459,6 +459,11 @@
                 [self setArrowFrame];
                 [self.scrollView.layer addSublayer:self.selectionIndicatorArrowLayer];
             }
+        } else if (self.selectionStyle == HMSegmentedControlSelectionStyleDot) {
+            if (!self.selectionIndicatorArrowLayer.superlayer) {
+                [self setDotFrame];
+                [self.scrollView.layer addSublayer:self.selectionIndicatorArrowLayer];
+            }
         } else {
             if (!self.selectionIndicatorStripLayer.superlayer) {
                 self.selectionIndicatorStripLayer.frame = [self frameForSelectionIndicator];
@@ -504,6 +509,19 @@
         borderLayer.backgroundColor = self.borderColor.CGColor;
         [backgroundLayer addSublayer: borderLayer];
     }
+}
+
+- (void)setDotFrame {
+    self.selectionIndicatorArrowLayer.frame = [self frameForSelectionIndicator];
+    
+    self.selectionIndicatorArrowLayer.mask = nil;
+    
+    UIBezierPath *arrowPath = [UIBezierPath bezierPathWithOvalInRect:self.selectionIndicatorArrowLayer.bounds];
+    
+    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+    maskLayer.frame = self.selectionIndicatorArrowLayer.bounds;
+    maskLayer.path = arrowPath.CGPath;
+    self.selectionIndicatorArrowLayer.mask = maskLayer;
 }
 
 - (void)setArrowFrame {
@@ -573,6 +591,12 @@
         
         CGFloat x = widthToStartOfSelectedIndex + ((widthToEndOfSelectedSegment - widthToStartOfSelectedIndex) / 2) - (self.selectionIndicatorHeight/2);
         return CGRectMake(x - (self.selectionIndicatorHeight / 2), indicatorYOffset, self.selectionIndicatorHeight * 2, self.selectionIndicatorHeight);
+    } else if (self.selectionStyle == HMSegmentedControlSelectionStyleDot) {
+        CGFloat widthToEndOfSelectedSegment = (self.segmentWidth * self.selectedSegmentIndex) + self.segmentWidth;
+        CGFloat widthToStartOfSelectedIndex = (self.segmentWidth * self.selectedSegmentIndex);
+        
+        CGFloat x = widthToStartOfSelectedIndex + ((widthToEndOfSelectedSegment - widthToStartOfSelectedIndex) / 2);
+        return CGRectMake(x, indicatorYOffset, self.selectionIndicatorHeight, self.selectionIndicatorHeight);
     } else {
         if (self.selectionStyle == HMSegmentedControlSelectionStyleTextWidthStripe &&
             sectionWidth <= self.segmentWidth &&
@@ -810,14 +834,14 @@
             // If the selected segment layer is not added to the super layer, that means no
             // index is currently selected, so add the layer then move it to the new
             // segment index without animating.
-            if(self.selectionStyle == HMSegmentedControlSelectionStyleArrow) {
+            if (self.selectionStyle == HMSegmentedControlSelectionStyleArrow || self.selectionStyle == HMSegmentedControlSelectionStyleDot) {
                 if ([self.selectionIndicatorArrowLayer superlayer] == nil) {
                     [self.scrollView.layer addSublayer:self.selectionIndicatorArrowLayer];
                     
                     [self setSelectedSegmentIndex:index animated:NO notify:YES];
                     return;
                 }
-            }else {
+            } else {
                 if ([self.selectionIndicatorStripLayer superlayer] == nil) {
                     [self.scrollView.layer addSublayer:self.selectionIndicatorStripLayer];
                     
